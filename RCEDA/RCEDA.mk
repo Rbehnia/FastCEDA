@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Rouzbeh
-Date                   :=23/08/18
+Date                   :=24/08/18
 CodeLitePath           :="/home/rouzbeh/.codelite"
 LinkerName             :=/usr/bin/x86_64-linux-gnu-g++
 SharedObjectLinkerName :=/usr/bin/x86_64-linux-gnu-g++ -shared -fPIC
@@ -51,7 +51,7 @@ AR       := /usr/bin/x86_64-linux-gnu-ar rcu
 CXX      := /usr/bin/x86_64-linux-gnu-g++
 CC       := /usr/bin/x86_64-linux-gnu-gcc
 CXXFLAGS :=  -g -O3 -Wall $(Preprocessors)
-CFLAGS   :=  -g -O3 -Wall -march=native $(Preprocessors)
+CFLAGS   :=  -pg -g -O3 -std=c99 -Wall -march=native $(Preprocessors)
 ASFLAGS  := 
 AS       := /usr/bin/x86_64-linux-gnu-as
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Session Name="/home/rouzbeh/Documents/RCEDA/RCEDA.workspace">
+  <int Value="0" Name="m_selectedTab"/>
+  <wxString Value="/home/rouzbeh/Documents/RCEDA/RCEDA.workspace" Name="m_workspaceName"/>
+  <TabInfoArray Name="TabInfoArray">
+    <TabInfo>
+      <wxString Value="/home/rouzbeh/Documents/RCEDA/RCEDA/main.c" Name="FileName"/>
+      <int Value="324" Name="FirstVisibleLine"/>
+      <int Value="345" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks">
+        <wxString Value="287:3"/>
+        <wxString Value="400:3"/>
+      </wxArrayString>
+      <IntVector Name="CollapsedFolds"/>
+    </TabInfo>
+    <TabInfo>
+      <wxString Value="/home/rouzbeh/Documents/RCEDA/RCEDA/params.h" Name="FileName"/>
+      <int Value="18" Name="FirstVisibleLine"/>
+      <int Value="16" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks"/>
+      <IntVector Name="CollapsedFolds"/>
+    </TabInfo>
+    <TabInfo>
+      <wxString Value="/home/rouzbeh/Documents/RCEDA/RCEDA/aes.c" Name="FileName"/>
+      <int Value="0" Name="FirstVisibleLine"/>
+      <int Value="0" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks"/>
+      <IntVector Name="CollapsedFolds"/>
+    </TabInfo>
+    <TabInfo>
+      <wxString Value="/home/rouzbeh/Documents/RCEDA/RCEDA/aes.h" Name="FileName"/>
+      <int Value="0" Name="FirstVisibleLine"/>
+      <int Value="0" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks"/>
+      <IntVector Name="CollapsedFolds"/>
+    </TabInfo>
+  </TabInfoArray>
+  <SerializedObject Name="m_breakpoints">
+    <long Value="0" Name="Count"/>
+  </SerializedObject>
+</Session>

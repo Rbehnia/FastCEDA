@@ -1,10 +1,13 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "params.h"
 #include "blake2.h"
 #include "aes.h"
- 
 #include "math.h"
-
 #include <gmp.h>
+#include <time.h>
+ 
 
 
 
@@ -20,10 +23,6 @@
 
 
 
-
-#define MODULUS_SIZE 3072                   /* This is the number of bits we want in the modulus */
-#define BLOCK_SIZE (MODULUS_SIZE/8)         /* This is the size of a block that gets en/decrypted at once */
-#define BUFFER_SIZE ((MODULUS_SIZE/8) / 2)  /* This is the number of bytes in n and p */
 
 typedef struct {
     mpz_t n; /* Modulus */
@@ -60,7 +59,7 @@ void generate_keys(private_key* ku, public_key* kp)
      * first then pick p,q st. gcd(e, p-1) = gcd(e, q-1) = 1 */
     // We'll set e globally.  I've seen suggestions to use primes like 3, 17 or
     // 65537, as they make coming calculations faster.  Lets use 3.
-    mpz_set_ui(ku->e, 65537);
+    mpz_set_ui(ku->e, 17);
 
     /* Select p and q */
     /* Start with p */
@@ -234,13 +233,69 @@ int decrypt(char* message, char* cipher, int length, private_key ku)
 //  ==================== RSA Code 
 
 
+//
+//void init_aes(unsigned char *sk){ 	// initialize the aes function with the key sk
+//
+//    block key;
+//	key = toBlock((uint8_t*)sk);
+//	setKey(key);
+//    
+//    return;
+//
+//    }
+    
+    
+//void sig_KeyGen(public_key kp, mpz_t*  c_pk){
+//    
+//    //init_aes(sk);
+//
+//    block* prf_out;
+//    uint16_t* prf_out2;
+//	prf_out = malloc(16*16);
+//	prf_out2 = malloc(16*16);
+//    uint64_t i = 0;
+//    mpz_t mpz_prf; // value to hold the prf output before enc in keyGen
+//    mpz_init(mpz_prf);
+//
+//    for ( i = 0;i<1024;i++){
+//  
+//        ecbEncCounterMode(i,16,prf_out);
+// 
+//        memcpy(prf_out2,prf_out,SECRECT_SIZE);
+// 
+//        mpz_import(mpz_prf,SECRECT_SIZE,1,sizeof(prf_out2[0]),0,0, prf_out2);
+//    
+//
+//          //  for (int j =0; j<1; j++){
+//          //  printf("\n The value of PRF for j = %d is %d for the i %d  \n",j, prf_out2[j],i);}
+//        mpz_init(c_pk[i]); // initialize the value of c_pk at i
+//        block_encrypt(c_pk[i],mpz_prf,kp); // encrypts the value of mpz_prf and stores it in c_pk[i]
+//
+//    // == == == == == == ** ** ** ** ** ** ** ** 
+//        mpz_invert(c_pk[i], c_pk[i], kp.n);
+//        //counter++;
+//            
+//
+//    }
+//    gmp_printf("This is the value in the MAIN of pk %Zd\n ",c_pk[0]);
+//
+//    free(prf_out);
+//    free(prf_out2);
+//    return;
+//}
 
-
-
-int main(int argc, char **argv)
-{
     private_key ku;
     public_key kp;
+
+int main( )
+{
+    // Timing variables 
+    double SignTime, VerifyTime;
+    SignTime = 0.0;
+    VerifyTime = 0.0;
+    clock_t flagSignStart, flagVerStart;
+	clock_t flagSignEnd, flagVerEnd;    
+    
     // Initialize public key
     mpz_init(kp.n);
     mpz_init(kp.e);
@@ -250,29 +305,26 @@ int main(int argc, char **argv)
     mpz_init(ku.d);
     mpz_init(ku.p);
     mpz_init(ku.q);
-	unsigned char sk[16] = {0x54, 0xa2, 0xf8, 0x03, 0x1d, 0x18, 0xac, 0x77, 0xd2, 0x53, 0x92, 0xf2, 0x80, 0xb4, 0xb1, 0x2f};
+	const unsigned char sk[16] = {0x54, 0xa2, 0xf8, 0x03, 0x1d, 0x18, 0xac, 0x77, 0xd2, 0x53, 0x92, 0xf2, 0x80, 0xb4, 0xb1, 0x2f};
     generate_keys(&ku, &kp);
 
-	block key;
+ 
 	block* prf_out;
-    uint16_t* prf_out2;
-	prf_out = malloc(8*16);
-	prf_out2 = malloc(8*16);
+    unsigned char * prf_out2;
+	prf_out = malloc(16*16);
+	prf_out2 = malloc(16*16);
 	
-    unsigned char z[32] = {0x54, 0xa2, 0xf8, 0x03, 0x1d, 0x18, 0xac, 0x77, 0xd2, 0x53, 0x92, 0xf2, 0x80, 0xb4, 0xb1, 0x2f, 0xac, 0xf1, 0x29, 0x3f, 0x3a, 0xe6, 0x77, 0x7d, 0x74, 0x15, 0x67, 0x91, 0x99, 0x53, 0x69, 0xc5};
+    const unsigned char z[32] = {0x54, 0xa2, 0xf8, 0x03, 0x1d, 0x18, 0xac, 0x77, 0xd2, 0x53, 0x92, 0xf2, 0x80, 0xb4, 0xb1, 0x2f, 0xac, 0xf1, 0x29, 0x3f, 0x3a, 0xe6, 0x77, 0x7d, 0x74, 0x15, 0x67, 0x91, 0x99, 0x53, 0x69, 0xc5};
     mpz_t c_pk[1024];
-
+    for ( int ij = 0;ij<1024;ij++)
+        mpz_init(c_pk[ij]);
 	uint64_t ii ,i;
 	ii = 1;
 	i = 0;
-
-	//CHANGED FROM 32 TO 64 BIT UINT
-	//xi, temp, rPrime
-	
-
-	// initialize the aes function with the key sk
+    block key;
 	key = toBlock((uint8_t*)sk);
 	setKey(key);
+ 
 	uint64_t index;
     uint64_t index_v;
 
@@ -283,17 +335,17 @@ int main(int argc, char **argv)
     
     mpz_t mpz_prf; // value to hold the prf output before enc in keyGen
     mpz_init(mpz_prf);
-    
-    
+  //  gmp_printf("This is the value in the MAIN of pk %Zd\n ",c_pk[0]);
+///    sig_KeyGen(kp, &c_pk);
     
     
     
     for (i = 0;i<1024;i++){
       //  printf("\n\n\n for i =%d \n\n\n",i);
-        ecbEncCounterMode(i,1,prf_out);
-        memcpy(prf_out2,prf_out,128);
+        ecbEncCounterMode(i,16,prf_out);
+        memcpy(prf_out2,prf_out,32);
+        mpz_import(mpz_prf,32 ,0,sizeof(prf_out2[0]),0,0, prf_out2);
         
-        mpz_import(mpz_prf,sizeof(prf_out2),1,sizeof(prf_out2[0]),0,0, prf_out2);
 
       //  for (int j =0; j<1; j++){
       //  printf("\n The value of PRF for j = %d is %d for the i %d  \n",j, prf_out2[j],i);}
@@ -302,6 +354,8 @@ int main(int argc, char **argv)
 
 // == == == == == == ** ** ** ** ** ** ** ** 
          mpz_invert(c_pk[i], c_pk[i], kp.n);
+         mpz_mod(c_pk[i],c_pk[i],kp.n);
+        // gmp_printf("This is the value in the main of pk %Zd\n ", ,c_pk[i]);
         counter++;
         
 
@@ -313,7 +367,7 @@ int main(int argc, char **argv)
 	
     // =========================== Sign 
     
-    unsigned char message[32] = {0x00};
+    uint8_t message[32] = {0};
     unsigned char h[32];
     unsigned char concatMsg[64] = {0x00};
     unsigned char hashedMsg[64] = {0x00};
@@ -327,34 +381,6 @@ int main(int argc, char **argv)
    // unsigned int one = 1;
     mpz_init(gamma);
     mpz_set_ui(gamma,1);
-    
-    ecbEncCounterMode(counter,1,prf_out); // To generate the randomness r 
-    memcpy(prf_out2,prf_out,128);
-    mpz_import(r,sizeof(prf_out2),1,sizeof(prf_out2[0]),0,0, prf_out2);
-    block_encrypt(R, r, kp); // To generate R
-    blake2b(h, R, NULL, sizeof(R),32,0); // Get the value of h from hash funtion
-    strcpy(concatMsg, message); // Concatenate msg with h 
-    memcpy(concatMsg+32, h, 32);  // Concatenate msg with h 
-    blake2b(hashedMsg, concatMsg, NULL, 64,64,0);
-   // printf("\n This is in the sign algo\n");
-   // for (unsigned i = 0; i < 64; ++i) 
-        //printf("The hash at %d is %x\n", i,hashedMsg[i] );
-    for (unsigned i = 0; i < 26; ++i) {
-        
-        index = hashedMsg[2*i] + (floor(hashedMsg[2*i+1]/64) * 256);
-      // printf(" The index is %d\n", index);
-        ecbEncCounterMode(index,1,prf_out);
-        memcpy(prf_out2,prf_out,128);
-        mpz_import(s_i,sizeof(prf_out2),1,sizeof(prf_out2[0]),0,0, prf_out2);
-        mpz_mul(gamma,s_i,gamma);
-        printf(" The index is %d\n", index);
-
-    }
-    mpz_mul(gamma,r,gamma); // multiply the masking term
-    mpz_mod(gamma,gamma,kp.n); // take the mod
-    
-    
-    // =========================== Verify
     unsigned char concatMsg_vfy[64] = {0x00};
     unsigned char hashedMsg_vfy[64] = {0x00};
     mpz_t Gamma; // value to hold the signature component \gamma
@@ -364,29 +390,109 @@ int main(int argc, char **argv)
     mpz_init(gamma_enc);
     mpz_t beta;
     mpz_init(beta);
-    strcpy(concatMsg_vfy, message); // Concatenate msg with h 
-    memcpy(concatMsg_vfy+32, h, 32);
-    blake2b(hashedMsg_vfy, concatMsg_vfy, NULL, 64,64,0);
-   // printf("\n\n\n This is in the Verify algo\n");
-    //for (unsigned i = 0; i < 64; ++i) 
-       // printf("The hash at %d is %x\n", i,hashedMsg_vfy[i] );
-    for (unsigned j = 0; j < 26; ++j) {
-        index_v = hashedMsg_vfy[2*j] + (floor(hashedMsg_vfy[2*j+1]/64) * 256);
-        mpz_mul(Gamma,c_pk[index_v],Gamma);
-        mpz_mod(Gamma,Gamma,kp.n); // take the mod
+    int zz;
+    for (zz = 0; zz < 100000; ++zz) {
+        mpz_set_ui(gamma,1);
+        
+        
+        flagSignStart = clock();
+        ecbEncCounterMode(counter,16,prf_out); // To generate the randomness r 
+       
+        //counter++;
+        memcpy(prf_out2,prf_out,32);
+        
+        mpz_import(r,32,0,sizeof(prf_out2[0]),0,0, prf_out2);
+         
+        mpz_mod(r,r,kp.n);
+        block_encrypt(R, r, kp); // To generate R
+      
+        blake2b(h, R, NULL, sizeof(R),32,0); // Get the value of h from hash funtion
+        strcpy(concatMsg, message); // Concatenate msg with h 
+       
+        //memcpy(concatMsg+32, h, 32);  // Concatenate msg with h 
+       
+        blake2b(hashedMsg, concatMsg, NULL, 64,64,0);
+ 
+        for (unsigned i = 0; i < 18; ++i) {
+          
+         index = hashedMsg[2*i] + ((hashedMsg[2*i+1]/64) * 256);
+           // index =  ((hashedMsg[2*i+1]/64) * 256);
+          
+          // printf(" The index is %d\n", index);
+            ecbEncCounterMode(index,16,prf_out);
+            memcpy(prf_out2,prf_out,32);
+             
+            mpz_import(s_i,32,0,sizeof(prf_out2[0]),0,0, prf_out2);
+                        
+           //   printf("This is the value in the main of pk %d\n ", mpz_sizeinbase(s_i, 2));
+         // take the mod
+          //  mpz_mod(s_i,s_i,kp.n);           
+//mpz_mod(gamma,gamma,kp.n); 
+            mpz_mul(gamma,s_i,gamma);
+          //  mpz_mod(gamma,gamma,kp.n);           
 
-  printf("The index is %d\n", index_v);
+
+        }
+              
+ 
+        mpz_mul(gamma,r,gamma); // multiply the masking term
+
+        mpz_mod(gamma,gamma,kp.n); // take the mod
+                   // printf(" The size of is prfout2 %d\n", mpz_size(s_i));
+
+                flagSignEnd = clock();
+        SignTime = SignTime +(double)(flagSignEnd-flagSignStart);
+        
+     
+        // =========================== Verify
+    //    unsigned char concatMsg_vfy[64] = {0x00};
+    //    unsigned char hashedMsg_vfy[64] = {0x00};
+    //    mpz_t Gamma; // value to hold the signature component \gamma
+    //    mpz_init(Gamma);
+    //    mpz_set_ui(Gamma,1);
+    //    mpz_t gamma_enc; // value to hold the signature component \gamma
+    //    mpz_init(gamma_enc);
+    //    mpz_t beta;
+    //    mpz_init(beta);
+        strcpy(concatMsg_vfy, message); // Concatenate msg with h 
+       // memcpy(concatMsg_vfy+32, h, 32);
+        mpz_set_ui(Gamma,1);
+        flagVerStart = clock();
+        blake2b(hashedMsg_vfy, concatMsg_vfy, NULL, 64,64,0);
+       // printf("\n\n\n This is in the Verify algo\n");
+        //for (unsigned i = 0; i < 64; ++i) 
+           // printf("The hash at %d is %x\n", i,hashedMsg_vfy[i] );
+        for (unsigned j = 0; j < 18; ++j) {
+           index_v = hashedMsg_vfy[2*j] + ((hashedMsg_vfy[2*j+1]/64) * 256);
+         //  index_v =  ((hashedMsg_vfy[2*j+1]/64) * 256);
+            mpz_mul(Gamma,c_pk[index_v],Gamma);
+            mpz_mod(Gamma,Gamma,kp.n); // take the mod
+
+     
+        }
+    //  gmp_printf ("\n %s is an mpz for R %Zd\n", "here", R);
+        block_encrypt(gamma_enc,gamma,kp); // encrypts the value of gamma
+    //  gmp_printf ("\n %s is an mpz for gamma %Zd\n", "here", gamma_enc);
+        mpz_mul(beta, gamma_enc,Gamma);
+        mpz_mod(beta,beta,kp.n);
+        flagVerEnd = clock();
+		VerifyTime = VerifyTime + (double)(flagVerEnd-flagVerStart);
+
     }
-//  gmp_printf ("\n %s is an mpz for R %Zd\n", "here", R);
-    block_encrypt(gamma_enc,gamma,kp); // encrypts the value of gamma
-//  gmp_printf ("\n %s is an mpz for gamma %Zd\n", "here", gamma_enc);
-    mpz_mul(beta, gamma_enc,Gamma);
-    mpz_mod(beta,beta,kp.n);
+
 //  gmp_printf ("\n %s is an mpz for gamma %Zd\n", "here", beta);
     if (mpz_cmp(R,beta) == 0)
 		printf("SIGNATURE IS VERIFIED\n");
 	else
 		printf("SIGNATURE IS NOT VERIFIED\n");
+        
+    printf("Parameters:\n");
+	printf("|N| = %d\n", MODULUS_SIZE);
+	gmp_printf("e = %x\n", kp.e);
+   // printf("%fus per sign\n", ((double) (SignTime)));
+	printf("%fus per sign\n", ((double) (SignTime * 1000)) / CLOCKS_PER_SEC / zz * 1000);
+	printf("%fus per verification\n", ((double) (VerifyTime * 1000)) / CLOCKS_PER_SEC / zz * 1000);
+	printf("%fus end-to-end delay\n", ((double) ((SignTime+VerifyTime) * 1000)) / CLOCKS_PER_SEC / zz * 1000);
     free(prf_out);
     free(prf_out2);
 	return 0;
